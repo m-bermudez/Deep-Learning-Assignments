@@ -171,6 +171,8 @@ cython_debug/
 .pypirc
 
 # Assignment Data files
-Assignment 05/archive/
 Assignment 04/art/
 Assignment 04/wandb/
+Assignment 05/StanfordDogs/
+Assignment 05/saved_models/
+Assignment 05/wandb/
