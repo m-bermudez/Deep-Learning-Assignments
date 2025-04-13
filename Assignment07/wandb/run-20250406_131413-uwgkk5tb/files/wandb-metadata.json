@@ -1,0 +1,38 @@
+{
+  "os":  "Windows-11-10.0.26100-SP0",
+  "python":  "CPython 3.12.9",
+  "startedAt":  "2025-04-06T17:14:13.965669Z",
+  "program":  "c:\\Users\\Gonax133\\Downloads\\Assignment07\\Assignment06-RNN.ipynb",
+  "codePath":  "Assignment06-RNN.ipynb",
+  "email":  "montoyaruiz@usf.edu",
+  "root":  "c:\\Users\\Gonax133\\Downloads\\Assignment07",
+  "host":  "DESKTOP-8GC0RTD",
+  "executable":  "c:\\Users\\Gonax133\\anaconda3\\envs\\DeepLearning\\python.exe",
+  "codePathLocal":  "Assignment06-RNN.ipynb",
+  "cpu_count":  6,
+  "cpu_count_logical":  12,
+  "gpu":  "NVIDIA GeForce RTX 4070 Ti SUPER",
+  "gpu_count":  1,
+  "disk":  {
+    "/":  {
+      "total":  "1999594795008",
+      "used":  "366132862976"
+    }
+  },
+  "memory":  {
+    "total":  "33460731904"
+  },
+  "cpu":  {
+    "count":  6,
+    "countLogical":  12
+  },
+  "gpu_nvidia":  [
+    {
+      "name":  "NVIDIA GeForce RTX 4070 Ti SUPER",
+      "memoryTotal":  "17171480576",
+      "cudaCores":  8448,
+      "architecture":  "Ada"
+    }
+  ],
+  "cudaVersion":  "12.6"
+}
