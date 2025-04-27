@@ -65,7 +65,7 @@ def run_evaluation():
                 return_tensors="pt",
                 padding=True,
                 truncation=True,
-                max_length=512
+                max_length=256
             ).to(device)
 
             with torch.no_grad():

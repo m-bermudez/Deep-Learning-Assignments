@@ -83,9 +83,9 @@ peft_output_dir = "./peft_adapter"
 
 # Training parameters
 num_epochs = 2
-batch_size = 4 if torch.cuda.is_available() else 2
+batch_size = 2 if torch.cuda.is_available() else 2
 learning_rate = 2e-5
-gradient_accumulation_steps = 4
+gradient_accumulation_steps = 2
 warmup_steps = 500
 logging_steps = 50
 

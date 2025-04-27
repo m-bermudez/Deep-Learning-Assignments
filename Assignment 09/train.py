@@ -51,7 +51,7 @@ def run_training(model, tokenizer, dataset):
                     texts,
                     padding="max_length",
                     truncation=True,
-                    max_length=512,
+                    max_length=256,
                     return_tensors="pt"
                 )
 
