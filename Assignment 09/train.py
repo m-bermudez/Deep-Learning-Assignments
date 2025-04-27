@@ -7,7 +7,8 @@ from transformers import get_linear_schedule_with_warmup
 from utils import (
     logger, output_dir, peft_output_dir,
     gradient_accumulation_steps, learning_rate,
-    num_epochs, warmup_steps, logging_steps, batch_size
+    num_epochs, warmup_steps, logging_steps, batch_size,
+    max_input_length, max_target_length
 )
 
 def run_training(model, tokenizer, dataset):
@@ -46,20 +47,31 @@ def run_training(model, tokenizer, dataset):
             for step, batch in enumerate(progress_bar):
                 texts = batch["text"]
 
-                # Tokenize inside the loop
-                tokenized = tokenizer(
-                    texts,
+                # ✨ Split inputs and targets
+                inputs = [text.split("### Response:")[0] + "### Response:" for text in texts]
+                targets = [text.split("### Response:")[1] for text in texts]
+
+                model_inputs = tokenizer(
+                    inputs,
                     padding="max_length",
                     truncation=True,
-                    max_length=256,
+                    max_length=max_input_length,
                     return_tensors="pt"
                 )
 
-                input_ids = tokenized.input_ids.to(device)
-                attention_mask = tokenized.attention_mask.to(device)
+                labels = tokenizer(
+                    targets,
+                    padding="max_length",
+                    truncation=True,
+                    max_length=max_target_length,
+                    return_tensors="pt"
+                ).input_ids
 
-                # The label is the expected summary (in instruction format, it's in "text" too)
-                labels = input_ids.clone()
+                labels[labels == tokenizer.pad_token_id] = -100
+
+                input_ids = model_inputs.input_ids.to(device)
+                attention_mask = model_inputs.attention_mask.to(device)
+                labels = labels.to(device)
 
                 outputs = model(
                     input_ids=input_ids,
@@ -84,14 +96,12 @@ def run_training(model, tokenizer, dataset):
                         logger.info(f"Step {global_step}: Avg Loss = {avg_loss:.4f}")
                         running_loss = 0.0
 
-            # Save LoRA adapter checkpoint after every epoch
             save_path = os.path.join(peft_output_dir, f"epoch_{epoch+1}")
             os.makedirs(save_path, exist_ok=True)
             model.save_pretrained(save_path)
             tokenizer.save_pretrained(save_path)
             logger.info(f"Saved model checkpoint to {save_path}")
 
-        # Final save
         final_path = peft_output_dir
         os.makedirs(final_path, exist_ok=True)
         model.save_pretrained(final_path)

@@ -29,7 +29,6 @@ set_seed()
 
 # --- Check for GPU availability ---
 def check_gpu_availability():
-    """Check for GPU availability and print details if available."""
     if torch.cuda.is_available():
         gpu_count = torch.cuda.device_count()
         gpu_name = torch.cuda.get_device_name(0)
@@ -43,7 +42,7 @@ def check_gpu_availability():
         logger.warning("Consider using a GPU-enabled environment (Google Colab, Kaggle, etc.)")
         return False
 
-# Check if we have a GPU
+# Check GPU
 has_gpu = check_gpu_availability()
 if not has_gpu:
     user_response = input("Continue without GPU? (y/n): ")
@@ -59,13 +58,12 @@ except ImportError:
     import importlib_metadata
 
 def get_package_version(package_name):
-    """Get package version or return 'Not installed' if not found."""
     try:
         return importlib_metadata.version(package_name)
     except importlib_metadata.PackageNotFoundError:
         return "Not installed"
 
-# Print library versions
+# Log versions
 logger.info(f"PyTorch version: {torch.__version__}")
 logger.info(f"Transformers version: {get_package_version('transformers')}")
 logger.info(f"PEFT version: {get_package_version('peft')}")
@@ -73,7 +71,7 @@ logger.info(f"Datasets version: {get_package_version('datasets')}")
 logger.info(f"BitsAndBytes version: {get_package_version('bitsandbytes')}")
 logger.info(f"Accelerate version: {get_package_version('accelerate')}")
 
-# --- Configuration ---
+# --- Config ---
 model_id = "t5-large" 
 dataset_name = "billsum"         
 dataset_text_field = "text"        
@@ -81,13 +79,24 @@ dataset_summary_field = "summary"
 output_dir = "./fine_tuned_model"
 peft_output_dir = "./peft_adapter"
 
-# Training parameters
+# Training params
 num_epochs = 2
-batch_size = 2 if torch.cuda.is_available() else 2
-learning_rate = 2e-5
-gradient_accumulation_steps = 2
-warmup_steps = 500
+batch_size = 4 if torch.cuda.is_available() else 2
+learning_rate = 1e-5
+gradient_accumulation_steps = 4
+warmup_steps = 200
 logging_steps = 50
+
+# Max lengths
+max_input_length = 1024
+max_target_length = 512
+
+# Evaluation generation params
+max_new_tokens = 256
+num_beams = 4
+repetition_penalty = 1.4
+length_penalty = 1.2
+early_stopping = True
 
 # Flag to control quantization
 skip_quantization = False

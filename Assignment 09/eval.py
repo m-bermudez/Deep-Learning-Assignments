@@ -2,12 +2,15 @@ import torch
 from datasets import load_dataset
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 from peft import PeftModel
-from utils import logger, dataset_name, model_id, peft_output_dir
+from utils import (
+    logger, dataset_name, model_id, peft_output_dir,
+    max_input_length, max_new_tokens, num_beams,
+    repetition_penalty, length_penalty, early_stopping
+)
 from rouge_score import rouge_scorer
 import re
 
 def clean_text(text):
-    """Clean text by removing \n and extra spaces."""
     text = text.replace('\n', ' ')
     text = re.sub(r'\s+', ' ', text)
     return text.strip()
@@ -16,7 +19,6 @@ def run_evaluation():
     logger.info("Running evaluation on test set...")
 
     try:
-        # Load base model
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model = AutoModelForSeq2SeqLM.from_pretrained(
             model_id,
@@ -26,7 +28,7 @@ def run_evaluation():
         )
 
         model = PeftModel.from_pretrained(model, peft_output_dir)
-        model = model.merge_and_unload()  # Merge LoRA weights
+        model = model.merge_and_unload()
         model = model.to(device)
         model.eval()
 
@@ -35,11 +37,9 @@ def run_evaluation():
             tokenizer.pad_token = tokenizer.eos_token
         tokenizer.padding_side = "right"
 
-        # Load and format test set
         test_dataset = load_dataset(dataset_name, split="test")
 
         def format_instruction(sample):
-            """Format and clean text for summarization."""
             cleaned_text = clean_text(sample["text"])
             return (
                 f"### Instruction:\nSummarize the following legal bill.\n\n"
@@ -56,7 +56,6 @@ def run_evaluation():
             if i >= num_samples:
                 break
 
-            # --- Prepare input ---
             formatted_input = format_instruction(sample)
             ground_truth = sample.get("summary", "")
 
@@ -65,20 +64,22 @@ def run_evaluation():
                 return_tensors="pt",
                 padding=True,
                 truncation=True,
-                max_length=256
+                max_length=max_input_length
             ).to(device)
 
             with torch.no_grad():
                 generated_ids = model.generate(
                     input_ids=inputs["input_ids"],
                     attention_mask=inputs["attention_mask"],
-                    max_new_tokens=128,
-                    num_beams=4,
+                    max_new_tokens=max_new_tokens,
+                    num_beams=num_beams,
+                    repetition_penalty=repetition_penalty,
+                    length_penalty=length_penalty,
+                    early_stopping=early_stopping,
                 )
 
             generated_text = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
 
-            # --- Score ---
             scores = scorer.score(generated_text, ground_truth)
             rouge1_scores.append(scores["rouge1"].fmeasure)
             rouge2_scores.append(scores["rouge2"].fmeasure)
@@ -93,7 +94,6 @@ def run_evaluation():
                 logger.info(f"ROUGE-2: {scores['rouge2'].fmeasure:.4f}")
                 logger.info(f"ROUGE-L: {scores['rougeL'].fmeasure:.4f}")
 
-        # --- Average scores ---
         avg_rouge1 = sum(rouge1_scores) / len(rouge1_scores)
         avg_rouge2 = sum(rouge2_scores) / len(rouge2_scores)
         avg_rougeL = sum(rougeL_scores) / len(rougeL_scores)
