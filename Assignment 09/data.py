@@ -5,7 +5,7 @@ import re
 
 # --- Load Dataset ---
 try:
-    dataset = load_dataset(dataset_name, split="train[:60%]")
+    dataset = load_dataset(dataset_name, split="train[:80%]")
     logger.info(f"Successfully loaded dataset: {dataset_name}")
     logger.info(f"Dataset size: {len(dataset)} examples")
     logger.info(f"Example data point: {dataset[0]}")
